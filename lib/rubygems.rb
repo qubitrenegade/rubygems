@@ -1272,17 +1272,6 @@ An Array (#{env.inspect}) was passed in from #{caller[3]}
     end
 
     ##
-    # Remove needless Gem::Specification of default gem from
-    # unresolved default gem list
-
-    def remove_unresolved_default_spec(spec)
-      spec.files.each do |file|
-        @path_to_default_spec_map.delete(file)
-        @path_to_default_spec_map.delete(file.sub(suffix_regexp, ""))
-      end
-    end
-
-    ##
     # Clear default gem related variables. It is for test
 
     def clear_default_specs
