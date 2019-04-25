@@ -37,13 +37,11 @@ module Kernel
     path = path.to_path if path.respond_to? :to_path
 
     if spec = Gem.find_unresolved_default_spec(path)
-      unless Gem.loaded_specs[spec.name] == spec
-        begin
-          Kernel.send(:gem, spec.name, "#{Gem::Requirement.default}.a")
-        rescue Exception
-          RUBYGEMS_ACTIVATION_MONITOR.exit
-          raise
-        end
+      begin
+        Kernel.send(:gem, spec.name, "#{Gem::Requirement.default}.a")
+      rescue Exception
+        RUBYGEMS_ACTIVATION_MONITOR.exit
+        raise
       end
     end
 
