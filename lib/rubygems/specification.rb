@@ -654,8 +654,8 @@ class Gem::Specification < Gem::BasicSpecification
   #  # This gem will work with 1.8.6 or greater...
   #  spec.required_ruby_version = '>= 1.8.6'
   #
-  #  # Only with ruby 2.0.x
-  #  spec.required_ruby_version = '~> 2.0'
+  #  # Only with final releases of major version 2 where minor version is at least 3
+  #  spec.required_ruby_version = '~> 2.3'
   #
   #  # Only prereleases or final releases after 2.6.0.preview2
   #  spec.required_ruby_version = '> 2.6.0.preview2'
@@ -743,9 +743,6 @@ class Gem::Specification < Gem::BasicSpecification
   def self._all # :nodoc:
     unless defined?(@@all) && @@all
       @@all = stubs.map(&:to_spec)
-      if @@all.any?(&:nil?) # TODO: remove once we're happy
-        raise "pid: #{$$} nil spec! included in #{stubs.inspect}"
-      end
 
       # After a reset, make sure already loaded specs
       # are still marked as activated.
@@ -896,7 +893,6 @@ class Gem::Specification < Gem::BasicSpecification
   # -- wilsonb
 
   def self.all=(specs)
-    raise "nil spec!" if specs.any?(&:nil?) # TODO: remove once we're happy
     @@stubs_by_name = specs.group_by(&:name)
     @@all = @@stubs = specs
   end
@@ -1498,16 +1494,7 @@ class Gem::Specification < Gem::BasicSpecification
 
     paths = full_require_paths
 
-    # gem directories must come after -I and ENV['RUBYLIB']
-    insert_index = Gem.load_path_insert_index
-
-    if insert_index
-      # gem directories must come after -I and ENV['RUBYLIB']
-      $LOAD_PATH.insert(insert_index, *paths)
-    else
-      # we are probably testing in core, -I and RUBYLIB don't apply
-      $LOAD_PATH.unshift(*paths)
-    end
+    Gem.add_to_load_path(*paths)
   end
 
   ##
@@ -1927,8 +1914,7 @@ class Gem::Specification < Gem::BasicSpecification
   end
 
   def gems_dir
-    # TODO: this logic seems terribly broken, but tests fail if just base_dir
-    @gems_dir ||= File.join(loaded_from && base_dir || Gem.dir, "gems")
+    @gems_dir ||= File.join(base_dir, "gems")
   end
 
   ##
@@ -2595,8 +2581,6 @@ class Gem::Specification < Gem::BasicSpecification
   # checks..
 
   def validate(packaging = true, strict = false)
-    require 'rubygems/user_interaction'
-    extend Gem::UserInteraction
     normalize
 
     validation_policy = Gem::SpecificationPolicy.new(self)
