@@ -127,6 +127,8 @@ class Gem::Ext::Builder
       Gem::Ext::RakeBuilder
     when /CMakeLists.txt/ then
       Gem::Ext::CmakeBuilder
+    when /Cargo.toml/ then
+      Gem::Ext::CargoBuilder
     else
       extension_dir = File.join @gem_dir, File.dirname(extension)
 
